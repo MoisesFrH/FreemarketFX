@@ -12,12 +12,25 @@ SELECT
     sgrp.GroupPod AS SenderGroupPod,
     rgrp.GroupPod AS ReceiverGroupPod
 FROM InternalTransfers it
-JOIN account sacc ON it.SenderAccountId = sacc.AccountId
-JOIN account racc ON it.ReceiverAccountId = racc.AccountId
-JOIN "Group" sgrp ON sacc.GroupId = sgrp.GroupId
-JOIN "Group" rgrp ON racc.GroupId = rgrp.GroupId
-WHERE it.TransferStatus = 'Completed'
+
+-- Sender side
+JOIN Account sacc
+  ON it.SenderAccountId = sacc.AccountId
+JOIN Client scli
+  ON sacc.ClientId = scli.ClientId
+JOIN "Group" sgrp
+  ON scli.GroupId = sgrp.GroupId
+
+-- Receiver side
+JOIN Account racc
+  ON it.ReceiverAccountId = racc.AccountId
+JOIN Client rcli
+  ON racc.ClientId = rcli.ClientId
+JOIN "Group" rgrp
+  ON rcli.GroupId = rgrp.GroupId
+
+WHERE it.TransferStatus = 'completed'
   AND it.TransferTime >= '2025-01-01'
   AND it.TransferTime <  '2025-04-01'
-  AND sgrp.GroupPod != rgrp.GroupPod
+  AND sgrp.GroupPod <> rgrp.GroupPod
 ORDER BY it.TransferTime;

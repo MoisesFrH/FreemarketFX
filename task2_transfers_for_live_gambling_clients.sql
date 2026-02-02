@@ -7,28 +7,29 @@ SELECT
     c.ClientId,
     c.ClientName,
     SUM(
-        CASE it.Currency
-            WHEN 'GBP' THEN it.Amt
+        CASE
+            WHEN it.Currency = 'GBP' THEN it.Amt
             ELSE it.Amt * der.Rate
         END
     ) AS GBP_Normalized_Amt
 FROM InternalTransfers it
-JOIN account a ON it.SenderAccountId = a.AccountId
-JOIN Client c ON a.ClientId = c.ClientId
-JOIN DailyExchangeRate der 
-    ON it.Currency = der.FromCurrency
-   AND der.ToCurrency = 'GBP'
-   AND it.TransferTime = der.Date
+JOIN Account a
+  ON it.SenderAccountId = a.AccountId
+JOIN Client c
+  ON a.ClientId = c.ClientId
+JOIN DailyExchangeRate der
+  ON it.Currency = der.FromCurrency
+ AND der.ToCurrency = 'GBP'
+ AND DATE(it.TransferTime) = der.Date
 WHERE it.TransferStatus = 'Completed'
   AND it.TransferTime >= '2024-01-01'
   AND it.TransferTime <  '2025-01-01'
   AND c.Vertical = 'Gambling'
   AND EXISTS (
         SELECT 1
-        FROM account a2
+        FROM Account a2
         WHERE a2.ClientId = c.ClientId
-          AND a2.AccountStatus = 'Live'
+          AND a2.AccountStatus = 'live'
   )
 GROUP BY c.ClientId, c.ClientName
 ORDER BY c.ClientName;
-
